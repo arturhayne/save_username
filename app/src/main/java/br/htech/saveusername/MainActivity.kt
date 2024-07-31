@@ -10,37 +10,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModelProvider
 import br.htech.saveusername.ui.theme.SaveUsernameTheme
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var userViewModel: UserViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val sharedPreferencesHelper = SharedPreferencesHelper(this)
+        val userRepository = UserRepository(sharedPreferencesHelper)
+        val viewModelFactory = UserViewModelFactory(userRepository)
+
+        userViewModel = ViewModelProvider(this, viewModelFactory).get(UserViewModel::class.java)
+
         setContent {
-            SaveUsernameTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting("Android")
-                }
-            }
+            MyApp(userViewModel)
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SaveUsernameTheme {
-        Greeting("Android")
     }
 }
