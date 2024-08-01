@@ -18,14 +18,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun MyApp(userViewModel: UserViewModel) {
-    val userName by userViewModel.userName.observeAsState()
-    var textFieldValue by remember { mutableStateOf("") }
+    val userPreferences by userViewModel.userPreferences.observeAsState(UserPreferences.getDefaultInstance())
+    MyAppContent(
+        userPreferences,
+        { username: String -> userViewModel.setUserName(username) },
+        { email: String -> userViewModel.setEmail(email) }
+    )
+}
+@Composable
+fun MyAppContent(
+    userPreferences: UserPreferences,
+    setUserName: (String) ->Unit,
+    setEmail: (String) ->Unit,
+) {
+    var userNameInput by remember { mutableStateOf(userPreferences.userName) }
+    var emailInput by remember { mutableStateOf(userPreferences.email) }
 
     Column(
         modifier = Modifier
@@ -35,32 +47,49 @@ fun MyApp(userViewModel: UserViewModel) {
         verticalArrangement = Arrangement.Center
     ) {
         TextField(
-            value = textFieldValue,
-            onValueChange = { textFieldValue = it },
+            value = userNameInput,
+            onValueChange = { userNameInput = it },
             label = { Text("Enter user name") },
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        TextField(
+            value = emailInput,
+            onValueChange = { emailInput = it },
+            label = { Text("Enter email") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(onClick = {
-            userViewModel.setUserName(textFieldValue)
+            setUserName(userNameInput)
+            setEmail(emailInput)
         }) {
             Text("Save")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = userName ?: "No user name saved")
+        Text(text = userPreferences.userName ?: "No user name saved")
+        Text(text = userPreferences.email ?: "No email saved")
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun MyAppPreview() {
-    val fakeSharedPreferencesHelper = SharedPreferencesHelper(context = LocalContext.current)
-    val fakeUserRepository = UserRepository(fakeSharedPreferencesHelper)
-    val fakeUserViewModel = UserViewModel(fakeUserRepository)
+fun MyAppContentPreview() {
+    val previewUserPreferences = UserPreferences.newBuilder()
+        .setUserName("Preview User")
+        .setEmail("preview@example.com")
+        .build()
 
-    MyApp(userViewModel = fakeUserViewModel)
+    MyAppContent(
+        userPreferences = previewUserPreferences,
+        setUserName = {},
+        setEmail = {}
+    )
 }
+

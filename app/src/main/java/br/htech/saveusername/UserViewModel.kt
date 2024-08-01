@@ -1,26 +1,32 @@
 package br.htech.saveusername
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 
 class UserViewModel(private val userRepository: UserRepository) : ViewModel() {
 
-    private val _userName = MutableLiveData<String?>()
-    val userName: LiveData<String?> get() = _userName
-
-    init {
-        _userName.value = userRepository.getUserName()
-    }
+    val userPreferences: LiveData<UserPreferences> = userRepository.userPreferences
+        .asLiveData()
 
     fun setUserName(userName: String) {
-        userRepository.setUserName(userName)
-        _userName.value = userName
+        viewModelScope.launch {
+            userRepository.setUserName(userName)
+        }
+    }
+
+    fun setEmail(email: String) {
+        viewModelScope.launch {
+            userRepository.setEmail(email)
+        }
     }
 }
 
 class UserViewModelFactory(private val userRepository: UserRepository) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(UserViewModel::class.java)) {
             return UserViewModel(userRepository) as T
@@ -28,4 +34,3 @@ class UserViewModelFactory(private val userRepository: UserRepository) : ViewMod
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-
